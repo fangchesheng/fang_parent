@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.fang.eduservice.mapper.EduCourseMapper">
+    <select id="getPublishCourseInfo" parameterType="java.lang.String" resultType="com.fang.eduservice.entity.vo.CoursePublishVo">
+        select
+            ec.id,
+            ec.title,
+            ec.price,
+            ec.cover,
+            ec.lesson_num as lessonNum,
+            ecd.description,
+            et.name as teacherName,
+            es1.title as subjectLevelOne,
+            es2.title as subjectLevelTwo
+        from  edu_course ec
+                LEFT JOIN edu_course_description ecd on ec.id = ecd.id
+                LEFT JOIN edu_teacher et on et.id= ec.teacher_id
+                LEFT JOIN edu_subject es1 on es1.id=ec.subject_parent_id
+                LEFT JOIN edu_subject es2 on es1.id=ec.subject_id
+        WHERE ec.id=#{courseId}
+    </select>
+
+</mapper>
