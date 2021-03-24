@@ -1,16 +1,19 @@
 package com.fang.eduservice.controller;
 
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fang.commonutils.BusinessException;
 import com.fang.commonutils.R;
 import com.fang.eduservice.common.Contants;
 import com.fang.eduservice.entity.EduCourse;
 import com.fang.eduservice.entity.vo.CourseInfoVo;
 import com.fang.eduservice.entity.vo.CoursePublishVo;
+import com.fang.eduservice.entity.vo.CourseQuery;
 import com.fang.eduservice.service.EduCourseService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -80,14 +83,37 @@ public class EduCourseController {
         }
     }
 
-    @GetMapping("getCoursePage/{current}/{limit}")
-    public R getCourseList(@PathVariable long current ,@PathVariable long limit){
+    //    查询列表数据
+    @PostMapping("getCoursePage/{current}/{limit}")
+    public R getCourseList(@PathVariable long current ,
+                           @PathVariable long limit, @RequestBody CourseQuery courseQuery){
         Page<EduCourse> page = new Page<EduCourse>(current,limit);
-        courseService.page(page, null);
+        QueryWrapper<EduCourse> queryWrapper = new QueryWrapper<>();
+        String title = courseQuery.getTitle();
+        String status = courseQuery.getStatus();
+        if (StringUtils.isNotBlank(title)){
+            queryWrapper.like("title",title);
+        }
+        if (StringUtils.isNotBlank(status)){
+            String statusLike = "2".equals(status)?Contants.DRAFT:Contants.NORMAL;
+            queryWrapper.eq("status",statusLike);
+        }
+        queryWrapper.orderByDesc("gmt_Create");
+
+        courseService.page(page, queryWrapper);
 
         long total = page.getTotal();
         List<EduCourse> records = page.getRecords();
         return R.ok().data("list",records).data("total",total);
     }
+
+// 删除表数据 --物理删除
+    @GetMapping("deleteCourseInfo/{id}")
+    public R deleteCourseInfo(@PathVariable String id) throws BusinessException {
+        courseService.deleteCourseInfo(id);
+        return R.ok();
+    }
+
+
 }
 

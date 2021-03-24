@@ -71,18 +71,21 @@ public class EduTeacherController {
                                   @RequestBody(required = false) EduTeacherQuery teacherQuery){
         Page<EduTeacher> page = new Page<>(current,limit);
 
-
 //        穿件查询条件包装类
         QueryWrapper<EduTeacher> wrapper = new QueryWrapper<>();
         String name = teacherQuery.getName();
         Integer level = teacherQuery.getLevel();
         String begin = teacherQuery.getBegin();
         String end = teacherQuery.getEnd();
+        String career = teacherQuery.getCareer();
         if(!StringUtils.isEmpty(name)){
             wrapper.like("name",name);
         }
         if(!StringUtils.isEmpty(level)){
             wrapper.eq("level",level);
+        }
+        if (!StringUtils.isEmpty(career)){
+            wrapper.like("career",career);
         }
         if(!StringUtils.isEmpty(begin)){
             wrapper.ge("gmt_create",begin);

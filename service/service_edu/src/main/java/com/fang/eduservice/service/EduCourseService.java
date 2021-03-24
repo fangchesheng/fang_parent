@@ -1,5 +1,6 @@
 package com.fang.eduservice.service;
 
+import com.fang.commonutils.BusinessException;
 import com.fang.eduservice.entity.EduCourse;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.fang.eduservice.entity.vo.CourseInfoVo;
@@ -22,4 +23,6 @@ public interface EduCourseService extends IService<EduCourse> {
     void updateCourseInfo(CourseInfoVo courseInfoVo) throws Exception;
 
     CoursePublishVo getPublishCourseInfo(String courseId);
+
+    void deleteCourseInfo(String id) throws BusinessException;
 }

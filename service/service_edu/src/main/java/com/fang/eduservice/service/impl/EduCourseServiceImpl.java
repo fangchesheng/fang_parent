@@ -1,20 +1,29 @@
 package com.fang.eduservice.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fang.commonutils.BusinessException;
+import com.fang.eduservice.entity.EduChapter;
 import com.fang.eduservice.entity.EduCourse;
 import com.fang.eduservice.entity.EduCourseDescription;
+import com.fang.eduservice.entity.EduVideo;
 import com.fang.eduservice.entity.vo.CourseInfoVo;
 import com.fang.eduservice.entity.vo.CoursePublishVo;
 import com.fang.eduservice.mapper.EduCourseMapper;
+import com.fang.eduservice.service.EduChapterService;
 import com.fang.eduservice.service.EduCourseDescriptionService;
 import com.fang.eduservice.service.EduCourseService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fang.eduservice.service.EduVideoService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * <p>
@@ -29,6 +38,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class EduCourseServiceImpl extends ServiceImpl<EduCourseMapper, EduCourse> implements EduCourseService {
     @Autowired
     private EduCourseDescriptionService descriptionService;
+
+    @Autowired
+    private EduChapterService chapterService;
+
+    @Autowired
+    private EduVideoService videoService;
+
 
 //    添加课程信息
     @Override
@@ -109,5 +125,36 @@ public class EduCourseServiceImpl extends ServiceImpl<EduCourseMapper, EduCourse
     @Override
     public CoursePublishVo getPublishCourseInfo(String courseId) {
         return baseMapper.getPublishCourseInfo(courseId);
+    }
+
+    @Override
+    public void deleteCourseInfo(String id) throws BusinessException {
+//      先查再删
+        EduCourse eduCourse = baseMapper.selectById(id);
+        if (eduCourse != null){
+//            判断释放有章节
+            QueryWrapper<EduChapter> queryWrapper = new QueryWrapper<>();
+            queryWrapper.eq("course_id",eduCourse.getId());
+            int count = chapterService.count(queryWrapper);
+            if (count != 0){
+                QueryWrapper<EduVideo> wrapper = new QueryWrapper<>();
+                wrapper.eq("id",eduCourse.getId());
+                List<EduVideo> list = videoService.list(wrapper);
+                if (CollectionUtils.isNotEmpty(list)){//有小节 先删小节内容
+                    String courseId = list.get(0).getCourseId();
+                    HashMap<String, Object> condition = new HashMap<>();
+                    condition.put("course_Id",courseId);
+                    videoService.removeByMap(condition);
+                }
+                chapterService.remove(queryWrapper);
+                descriptionService.removeById(id);
+                baseMapper.deleteById(id);
+            }else{//说明无章节
+                descriptionService.removeById(id);
+                baseMapper.deleteById(id);
+            }
+        }else{
+            throw new BusinessException("为查询到数据");
+        }
     }
 }
