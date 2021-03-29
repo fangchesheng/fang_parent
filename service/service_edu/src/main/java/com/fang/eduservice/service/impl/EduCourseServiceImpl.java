@@ -154,7 +154,7 @@ public class EduCourseServiceImpl extends ServiceImpl<EduCourseMapper, EduCourse
                 baseMapper.deleteById(id);
             }
         }else{
-            throw new BusinessException("为查询到数据");
+            throw new BusinessException("未查询到数据");
         }
     }
 }
