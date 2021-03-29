@@ -2,6 +2,7 @@ package com.fang.eduservice.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fang.commonutils.BusinessException;
+import com.fang.commonutils.ResultCode;
 import com.fang.eduservice.entity.EduChapter;
 import com.fang.eduservice.entity.EduCourse;
 import com.fang.eduservice.entity.EduCourseDescription;
@@ -130,6 +131,7 @@ public class EduCourseServiceImpl extends ServiceImpl<EduCourseMapper, EduCourse
     @Override
     public void deleteCourseInfo(String id) throws BusinessException {
 //      先查再删
+        int i = 0;
         EduCourse eduCourse = baseMapper.selectById(id);
         if (eduCourse != null){
 //            判断释放有章节
@@ -148,13 +150,16 @@ public class EduCourseServiceImpl extends ServiceImpl<EduCourseMapper, EduCourse
                 }
                 chapterService.remove(queryWrapper);
                 descriptionService.removeById(id);
-                baseMapper.deleteById(id);
+                i = baseMapper.deleteById(id);
             }else{//说明无章节
                 descriptionService.removeById(id);
-                baseMapper.deleteById(id);
+                i = baseMapper.deleteById(id);
+            }
+            if (i == 0){
+                throw new BusinessException("删除失败",ResultCode.ERROR);
             }
         }else{
-            throw new BusinessException("未查询到数据");
+            throw new BusinessException("未查询到数据，无法删除",ResultCode.ERROR);
         }
     }
 }
